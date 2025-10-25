@@ -136,7 +136,6 @@ public class LispParenthesesCheckerTest {
         assertTrue(LispParenthesesChecker.validateExpression("(\n\t(print (+ 1 2))\n)"));
     }
 
-    // --- 🔥 RANDOM EDGE EXAMPLES ---
 
     @Test
     public void testLoneParenthesesInText() {
