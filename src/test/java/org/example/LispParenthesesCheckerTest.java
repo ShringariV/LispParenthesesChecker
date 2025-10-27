@@ -161,4 +161,173 @@ public class LispParenthesesCheckerTest {
     public void testTrailingCharacters() {
         assertFalse(LispParenthesesChecker.validateExpression("(print 5))extra"));
     }
+
+    @Test
+    void testBalancedSimple() {
+        assertTrue(LispParenthesesChecker.validateExpression("(a b)"));
+    }
+
+    @Test
+    void testNestedBalanced() {
+        assertTrue(LispParenthesesChecker.validateExpression("(a (b (c)))"));
+    }
+
+    @Test
+    void testUnbalancedOpen() {
+        assertFalse(LispParenthesesChecker.validateExpression("((a b)"));
+    }
+
+    @Test
+    void testUnbalancedClose() {
+        assertFalse(LispParenthesesChecker.validateExpression("(a b)))"));
+    }
+
+
+    @Test
+    void testOnlyOpeningParentheses() {
+        assertFalse(LispParenthesesChecker.validateExpression("((("));
+    }
+
+    @Test
+    void testOnlyClosingParentheses() {
+        assertFalse(LispParenthesesChecker.validateExpression(")))"));
+    }
+
+    @Test
+    void testWhitespaceOnly() {
+        assertTrue(LispParenthesesChecker.validateExpression("     "));
+    }
+
+    @Test
+    void testLongValidExpression() {
+        String expr = "(((((((((((((((((((())))))))))))))))))))";
+        assertTrue(LispParenthesesChecker.validateExpression(expr));
+    }
+
+    @Test
+    void testLongInvalidExpression() {
+        String expr = "(((((((((((((((((((()))))))))))))))))))";
+        assertFalse(LispParenthesesChecker.validateExpression(expr));
+    }
+    @Test
+    void testEarlyCloseOrder() {
+        assertFalse(LispParenthesesChecker.validateExpression(")("));
+    }
+
+    @Test
+    void testInterleavedTextAndParentheses() {
+        assertTrue(LispParenthesesChecker.validateExpression("(define (square x) (* x x))"));
+    }
+
+    @Test
+    void testDeeplyNestedInvalid() {
+        assertFalse(LispParenthesesChecker.validateExpression("((a(b(c))))("));
+    }
+
+    @Test
+    void testEmptyStringIsBalanced() {
+        assertTrue(LispParenthesesChecker.validateExpression(""), "Empty string should be balanced");
+    }
+
+    @Test
+    void testNoParenthesesIsBalanced() {
+        assertTrue(LispParenthesesChecker.validateExpression("hello world"), "No parentheses should be balanced");
+    }
+
+    @Test
+    void testSimpleBalancedParentheses() {
+        assertTrue(LispParenthesesChecker.validateExpression("(x + y)"));
+        assertTrue(LispParenthesesChecker.validateExpression("{a[b(c)]}"));
+    }
+
+    @Test
+    void testSimpleUnbalancedParentheses() {
+        assertFalse(LispParenthesesChecker.validateExpression("("));
+        assertFalse(LispParenthesesChecker.validateExpression("(x + y"));
+        assertFalse(LispParenthesesChecker.validateExpression("([)]"), "Mismatched ordering should be invalid");
+    }
+
+    @Test
+    void testBalancedWithNestedBrackets() {
+        String expr = "({[()]})";
+        assertTrue(LispParenthesesChecker.validateExpression(expr), "Properly nested brackets should be valid");
+    }
+
+    @Test
+    void testUnbalancedWithExtraClosing() {
+        assertFalse(LispParenthesesChecker.validateExpression("(()))"), "Extra closing bracket should invalidate");
+    }
+
+    @Test
+    void testInvalidWhenBracketUnmatchedAcrossLines() {
+        String expr = "(\n /* comment */";
+        assertFalse(LispParenthesesChecker.validateExpression(expr));
+    }
+
+    @Test
+    void testEscapedQuotesInsideString() {
+        String expr = "\"This has an escaped quote \\\"(\\\"\" + (x)";
+        assertTrue(LispParenthesesChecker.validateExpression(expr), "Escaped quotes shouldn't break string mode");
+    }
+
+    @Test
+    void testUnbalancedParentheses() {
+        assertFalse(LispParenthesesChecker.validateExpression("("));
+        assertFalse(LispParenthesesChecker.validateExpression("(x + y"));
+        assertFalse(LispParenthesesChecker.validateExpression("([)]"));
+    }
+
+    @Test
+    void testBalancedNestedBrackets() {
+        assertTrue(LispParenthesesChecker.validateExpression("({[()]})"));
+    }
+
+    @Test
+    void testExtraClosingBracket() {
+        assertFalse(LispParenthesesChecker.validateExpression("(()))"));
+    }
+
+    @Test
+    void testBracketsInsideStringAreIgnored() {
+        String expr = "\"(not real brackets)\" + (real)";
+        assertTrue(LispParenthesesChecker.validateExpression(expr));
+    }
+
+    @Test
+    void testBracketsInsideLispCommentAreIgnored() {
+        String expr = "(x + y) ; comment with ( ) [ ] { }\n";
+        assertTrue(LispParenthesesChecker.validateExpression(expr));
+    }
+
+    @Test
+    void testMultipleLinesWithComments() {
+        String expr = "(a)\n; comment line with )\n(b)";
+        assertTrue(LispParenthesesChecker.validateExpression(expr));
+    }
+
+    @Test
+    void testUnclosedStringStillCounts() {
+        String expr = "\"(this never ends...\"";
+        assertTrue(LispParenthesesChecker.validateExpression(expr));
+    }
+
+    @Test
+    void testEscapedQuoteInsideString() {
+        String expr = "\"this has an escaped quote \\\"(\\\")\" (x)";
+        assertTrue(LispParenthesesChecker.validateExpression(expr));
+    }
+
+    @Test
+    void testMockResultOverrideTrue() {
+        LispParenthesesChecker.mockResult = true;
+        assertTrue(LispParenthesesChecker.validateExpression("((((("));
+        LispParenthesesChecker.mockResult = null;
+    }
+
+    @Test
+    void testMockResultOverrideFalse() {
+        LispParenthesesChecker.mockResult = false;
+        assertFalse(LispParenthesesChecker.validateExpression("(((()"));
+        LispParenthesesChecker.mockResult = null;
+    }
 }
